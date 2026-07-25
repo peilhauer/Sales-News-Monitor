@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WARN Layoff Monitor</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --border: #e2e1dc;
+    --text: #1c1c1a; --text-secondary: #5f5e5a; --text-muted: #888780;
+    --high-bg: #fcebeb; --high-text: #791f1f;
+    --medium-bg: #faeeda; --medium-text: #633806;
+    --watch-bg: #f1efe8; --watch-text: #444441;
+    --accent: #185fa5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .meta { font-size: 13px; color: var(--text-muted); }
+  button {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 14px; cursor: pointer; color: var(--text);
+  }
+  button:hover { background: #f0efe9; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 2rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+  .metric .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+  .metric .value { font-size: 26px; font-weight: 600; }
+  h2 { font-size: 17px; font-weight: 600; margin: 2rem 0 12px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .company { font-weight: 600; font-size: 15px; }
+  .badge { font-size: 12px; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
+  .badge.high { background: var(--high-bg); color: var(--high-text); }
+  .badge.medium { background: var(--medium-bg); color: var(--medium-text); }
+  .badge.watch { background: var(--watch-bg); color: var(--watch-text); }
+  .what { font-size: 14px; margin: 0 0 6px; }
+  .angle { font-size: 14px; color: var(--text-secondary); margin: 0 0 6px; }
+  .source { font-size: 12.5px; color: var(--text-muted); }
+  .source a { color: var(--accent); text-decoration: none; }
+  .source a:hover { text-decoration: underline; }
+  .no-activity { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; }
+  .empty { font-size: 14px; color: var(--text-muted); padding: 1rem 0; }
+  .error-strip { font-size: 13px; color: #b45309; background: #fef6e7; border: 1px solid #f5dfa8; border-radius: 8px; padding: 8px 12px; margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>WARN layoff monitor</h1>
+      <div class="meta" id="run-meta">Loading…</div>
+    </div>
+    <button id="refresh-btn">Run check now</button>
+  </header>
+
+  <div id="error-strip"></div>
+
+  <div class="summary" id="summary"></div>
+
+  <h2>Active events</h2>
+  <div id="active-list"><div class="empty">Loading…</div></div>
+
+  <h2>Watch list</h2>
+  <div id="watch-list"></div>
+
+  <h2>No activity</h2>
+  <div class="no-activity" id="no-activity"></div>
+</div>
+
+<script>
+async function loadReport() {
+  try {
+    const res = await fetch('/report');
+    if (res.status === 401) {
+      document.getElementById('run-meta').textContent = 'Sign in required — reload and enter credentials.';
+      return;
+    }
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('run-meta').textContent = 'Failed to load report: ' + e;
+  }
+}
+
+function badgeClass(signal) {
+  return signal === 'high' ? 'high' : signal === 'medium' ? 'medium' : 'watch';
+}
+
+function renderCard(item, compact) {
+  const badge = `<span class="badge ${badgeClass(item.signal)}">${item.signal}</span>`;
+  const source = item.source_name || item.source_url
+    ? `<div class="source">${item.source_name || ''}${item.source_date ? ', ' + item.source_date : ''}${item.source_url ? ` <a href="${item.source_url}" target="_blank" rel="noopener">source ↗</a>` : ''}</div>`
+    : '';
+  return `
+    <div class="card">
+      <div class="card-head">
+        <span class="company">${item.company}</span>
+        ${badge}
+      </div>
+      ${item.what_happened ? `<p class="what">${item.what_happened}</p>` : ''}
+      ${!compact && item.epiq_angle ? `<p class="angle">Epiq angle: ${item.epiq_angle}</p>` : ''}
+      ${source}
+    </div>`;
+}
+
+function render(data) {
+  document.getElementById('run-meta').textContent = data.run_at
+    ? 'Last run: ' + new Date(data.run_at).toLocaleString()
+    : 'No run yet — click "Run check now".';
+
+  document.getElementById('summary').innerHTML = `
+    <div class="metric"><div class="label">Active events</div><div class="value">${data.summary.active_count}</div></div>
+    <div class="metric"><div class="label">On watch</div><div class="value">${data.summary.watch_count}</div></div>
+    <div class="metric"><div class="label">No activity</div><div class="value">${data.summary.no_activity_count}</div></div>
+  `;
+
+  const activeEl = document.getElementById('active-list');
+  activeEl.innerHTML = data.active.length
+    ? data.active.map(i => renderCard(i, false)).join('')
+    : '<div class="empty">No active events this run.</div>';
+
+  const watchEl = document.getElementById('watch-list');
+  watchEl.innerHTML = data.watch.length
+    ? data.watch.map(i => renderCard(i, true)).join('')
+    : '<div class="empty">Nothing on watch this run.</div>';
+
+  document.getElementById('no-activity').textContent = data.no_activity.length
+    ? data.no_activity.join(', ')
+    : '—';
+}
+
+document.getElementById('refresh-btn').addEventListener('click', async () => {
+  const key = window.prompt('Admin API key (X-API-Key):');
+  if (!key) return;
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  try {
+    const res = await fetch('/refresh', { method: 'POST', headers: { 'X-API-Key': key } });
+    if (res.status === 401 || res.status === 403) {
+      document.getElementById('error-strip').innerHTML = '<div class="error-strip">That API key was rejected.</div>';
+    } else {
+      document.getElementById('error-strip').innerHTML = '<div class="error-strip">Check started in the background — this can take a few minutes for ~80 companies. Reload in a bit.</div>';
+    }
+  } catch (e) {
+    document.getElementById('error-strip').innerHTML = `<div class="error-strip">Refresh request failed: ${e}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run check now';
+  }
+});
+
+loadReport();
+</script>
+</body>
+</html>

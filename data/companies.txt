@@ -1,0 +1,87 @@
+# Peter's Target Company List
+# HOW TO EDIT THIS FILE:
+# - Add a company: type the name on a new line
+# - Remove a company: delete the line
+# - Restart the app (or hit POST /companies/reload) to pick up changes
+# -------------------------------------------------------------------------
+
+3M
+Abbott Laboratories
+ABC Supply CO
+Air Canada
+Alliant Energy Corporation
+Allstate
+American Family Mutual Insurance Company
+Ameriprise Financial
+AON
+Arthur Gallagher
+Astellas Pharma
+Atmus Filtration
+Baxter International
+Brunswick Corporation
+Cardinal Health
+Cassava Sciences
+CBOE Global Markets
+CF Industries
+Chamberlain Group
+CMS Energy Corporation
+CNA Insurance
+Conagra Brands
+Crate & Barrel
+Cummins
+Cushman & Wakefield
+Dow
+Ecolab
+Elevance Health
+Exelon Corporation
+Federal Home Loan Bank of Chicago
+Fiat Chrysler
+Fifth Third Bancorp
+Fiserv
+Fortune Brands
+GE Healthcare
+Grainger Inc
+Grant Thornton
+Harley-Davidson
+Health Care Service Corporation
+Hormel Foods
+Humana
+Hyatt Hotels
+Illinois Tool Works
+Ingredion Incorporated
+JM Smucker Company
+Johnson Controls
+Jones Lang Lasalle
+KONE
+Kraft Heinz
+Kroger Co.
+Lenovo
+McDonald's
+Molson Coors
+Mondelez
+Mutual of Omaha
+Principal Financial Group
+Procter & Gamble
+R1 RCM
+Rocket Loans
+Rockwell Automation
+RSM US
+RWE Americas
+Ryerson Holding Corporation
+State Farm
+The Walsh Group
+TransDigm Group
+TransUnion
+TriNet
+TruStage
+Ulta Beauty
+Union Pacific Corporation
+United Airlines Holdings
+Univar Solutions
+US Bancorp
+US Foods Holding Corp
+Veradigm
+Vertiv
+Walgreens
+Zebra Technologies
+Zurich American Insurance
